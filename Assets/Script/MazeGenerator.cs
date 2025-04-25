@@ -14,6 +14,21 @@ public class MazeGenerator : MonoBehaviour
     [SerializeField] 
     private int depth;
 
+    [SerializeField]
+    private GameObject chestPrefab;
+
+    [SerializeField]
+    private GameObject stairsPrefab;
+
+    [SerializeField]
+    private int chestCount = 10;
+
+    [SerializeField]
+    private int stairsCount = 5;
+
+
+
+
     private MazeCell[,] mazeGrid;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -30,6 +45,22 @@ public class MazeGenerator : MonoBehaviour
         }
 
         GenerateMaze(null, mazeGrid[0,0]);
+
+        List<MazeCell> deadEnds = GetDeadEnds().OrderBy(_ => Random.value).ToList();
+
+        int totalSpawnCount = Mathf.Min(chestCount + stairsCount, deadEnds.Count);
+        int actualChestCount = Mathf.Min(chestCount, totalSpawnCount);
+        int actualStairsCount = Mathf.Min(stairsCount, totalSpawnCount - actualChestCount);
+
+        SpawnChest(deadEnds.Take(chestCount).ToList());
+        SpawnStairs(deadEnds.Skip(chestCount).Take(stairsCount).ToList());
+
+        if (chestCount + stairsCount > deadEnds.Count)
+        {
+            Debug.LogWarning($"Requested {chestCount + stairsCount} spawns but only {deadEnds.Count} dead ends available. Some spawns were skipped.");
+        }
+
+
     }
 
     private void GenerateMaze(MazeCell previousCell, MazeCell currentCell)
@@ -121,6 +152,39 @@ public class MazeGenerator : MonoBehaviour
             currentCell.ClearFrontWall();
             return;
         }
+    }
+
+    private void SpawnChest(List<MazeCell> chestCells)
+    {
+        foreach (var cell in chestCells)
+        {
+            Vector3 position = cell.transform.position + new Vector3(0, 0, 0);
+            Instantiate(chestPrefab, position, Quaternion.Euler(270, 270, 0));
+        }
+    }
+
+    private void SpawnStairs(List<MazeCell> stairsCells)
+    {
+        foreach (var cell in stairsCells)
+        {
+            Vector3 position = cell.transform.position + new Vector3(0, 0, 0);
+            Instantiate(stairsPrefab, position, Quaternion.Euler(-90, 0, 0));
+        }
+    }
+
+    private List<MazeCell> GetDeadEnds()
+    {
+        List<MazeCell> deadEnds = new List<MazeCell>();
+
+        foreach (var cell in mazeGrid)
+        {
+            if (cell.IsVisited && cell != mazeGrid[0, 0] && cell.GetOpenWallCount() == 1)
+            {
+                deadEnds.Add(cell);
+            }
+        }
+
+        return deadEnds;
     }
 
     // Update is called once per frame
