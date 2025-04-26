@@ -1,16 +1,31 @@
-using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement; // Required for TextMeshPro
+using UnityEngine.SceneManagement;
+using UnityEngine;
 
 public class CountdownTimer : MonoBehaviour
 {
-    public float totalTime; // Total time in seconds
-    public TMP_Text timerText; // Assign this in the Inspector
+    public float totalTime;
+    public TMP_Text timerText;
+
+    private static CountdownTimer instance;
     private float currentTime;
+
+    void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject); // destroy duplicate
+            return;
+        }
+
+        instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     void Start()
     {
         currentTime = totalTime;
+        UpdateTimerText();
     }
 
     void Update()
@@ -22,18 +37,17 @@ public class CountdownTimer : MonoBehaviour
         }
         else
         {
-            // Timer finished, add your logic here
             Debug.Log("Time's up!");
-            timerText.text = "You Lose!!!"; // Or display "Time's up!" or any other message
+            timerText.text = "You Lose!!!";
+            AddTime(120);
             SceneManager.LoadScene(2);
         }
-
-
     }
 
     void UpdateTimerText()
     {
-        // Format the time as minutes:seconds (e.g., 01:30)
+        if (timerText == null) return;
+
         int minutes = Mathf.FloorToInt(currentTime / 60f);
         int seconds = Mathf.FloorToInt(currentTime % 60f);
         timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
@@ -46,7 +60,12 @@ public class CountdownTimer : MonoBehaviour
 
     public void RemoveTime(int seconds)
     {
-        currentTime -= seconds;
-        currentTime = Mathf.Max(currentTime, 0); // prevent negative time
+        currentTime = Mathf.Max(currentTime - seconds, 0);
+    }
+
+    public void SetTimerTextReference(TMP_Text newText)
+    {
+        timerText = newText;
+        UpdateTimerText();
     }
 }

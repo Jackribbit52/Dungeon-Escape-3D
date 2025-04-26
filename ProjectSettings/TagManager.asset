@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Stairs
   - Chest
+  - TimerText
   layers:
   - Default
   - TransparentFX
