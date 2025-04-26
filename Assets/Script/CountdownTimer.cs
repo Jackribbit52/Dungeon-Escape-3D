@@ -34,6 +34,12 @@ public class CountdownTimer : MonoBehaviour
         {
             currentTime -= Time.deltaTime;
             UpdateTimerText();
+
+            if (currentTime <= 30f)
+            {
+                // Switch to intense music
+                FindFirstObjectByType<BackgroundMusic>().SwitchToIntenseMusic();
+            }
         }
         else
         {

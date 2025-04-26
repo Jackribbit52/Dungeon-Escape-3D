@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private float moveInput;
     private float rotateInput;
+    public BackgroundMusic bgm;
+    public CountdownTimer timer;
 
     [SerializeField]
     private bool endless;
@@ -68,6 +70,8 @@ public class PlayerController : MonoBehaviour
             else
             {
                 SceneManager.LoadScene(3); // Final win screen or game over
+                timer.AddTime(120);
+                bgm.PlayEndingMusic();
             }
         }
     }

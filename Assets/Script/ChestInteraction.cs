@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine.SceneManagement;
 
 public class ChestInteraction : MonoBehaviour
 {
@@ -10,11 +12,37 @@ public class ChestInteraction : MonoBehaviour
     public Image blackScreenOverlay;
     public PlayerController playerController;
     public EffectPopupUI popupUI;
+    [SerializeField] 
+    private GameObject minimapUI;
 
 
     void Start()
     {
-        // Add more effects as needed
+        // Initialize chestEffects
+        InitializeChestEffects();
+
+        // Listen for scene reloads
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
+        minimapUI.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded; // Always unsubscribe to prevent memory leaks
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        countdown = FindFirstObjectByType<CountdownTimer>();
+        blackScreenOverlay = FindFirstObjectByType<Image>(); // If this is unique, otherwise be more specific
+        playerController = FindFirstObjectByType<PlayerController>();
+        minimapUI = GameObject.FindGameObjectWithTag("Minimap"); // (Tag your minimap GameObject)
+    }
+
+
+    void InitializeChestEffects()
+    {
         chestEffects = new List<System.Action>
         {
             AddTimeEffect,
@@ -22,7 +50,8 @@ public class ChestInteraction : MonoBehaviour
             BlackoutScreenEffect,
             DoubleSpeedEffect,
             HalfSpeedEffect,
-            FreezeEffect
+            FreezeEffect,
+            MinimapEffect
         };
     }
 
@@ -40,19 +69,25 @@ public class ChestInteraction : MonoBehaviour
     // Adds random time to the timer
     void AddTimeEffect()
     {
-        int timeChange = Random.Range(5, 11); // 5 to 10 seconds
+        int timeChange = Random.Range(5, 16); // 5 to 15 seconds
         countdown.AddTime(timeChange);
         Debug.Log("Chest bonus! +" + timeChange + " seconds");
-        popupUI.ShowMessage("You gained some time!", 5f);
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("You gained some time!", 5f);
+        }
     }
 
     // Removes random time from the timer
     void RemoveTimeEffect()
     {
-        int timeChange = Random.Range(5, 11); // 5 to 10 seconds
+        int timeChange = Random.Range(5, 16); // 5 to 15 seconds
         countdown.RemoveTime(timeChange);
         Debug.Log("Chest penalty! -" + timeChange + " seconds");
-        popupUI.ShowMessage("You lost some time!", 5f);
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("You lost some time!", 5f);
+        }
     }
 
     // Blindness
@@ -60,7 +95,10 @@ public class ChestInteraction : MonoBehaviour
     {
         Debug.Log("Black screen for 5 seconds");
         StartCoroutine(BlackoutCoroutine());
-        popupUI.ShowMessage("You've been blinded!", 5f);
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("You've been blinded!", 5f);
+        }
     }
 
     IEnumerator BlackoutCoroutine()
@@ -82,7 +120,10 @@ public class ChestInteraction : MonoBehaviour
         //Permanent
         Debug.Log("Speed Doubled");
         playerController.moveSpeed *= 2;
-        popupUI.ShowMessage("Your speed has been doubled!", 5f);
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("Your speed has been doubled!", 5f);
+        }    
     }
 
     // Slow time
@@ -95,8 +136,10 @@ public class ChestInteraction : MonoBehaviour
         //Permanent
         Debug.Log("Speed Halved");
         playerController.moveSpeed /= 2;
-        popupUI.ShowMessage("Your speed has been halved!", 5f);
-
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("Your speed has been halved!", 5f);
+        }
     }
 
     //Code for Temporary
@@ -115,7 +158,10 @@ public class ChestInteraction : MonoBehaviour
     {
         Debug.Log("Player frozen for 5 seconds!");
         StartCoroutine(FreezePlayer(5f));
-        popupUI.ShowMessage("You have been frozen!", 5f);
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("You have been frozen!", 5f);
+        }
 
     }
 
@@ -128,4 +174,24 @@ public class ChestInteraction : MonoBehaviour
 
         playerController.moveSpeed = originalSpeed;
     }
+
+    //Minimap
+    // New wrapper function for minimap
+    void MinimapEffect()
+    {
+        StartCoroutine(ShowMinimapTemporarily());
+        if (popupUI != null)
+        {
+            popupUI.ShowMessage("A minimap has been revealed!", 5f);
+        }
+    }
+
+    // Existing coroutine stays like this:
+    private IEnumerator ShowMinimapTemporarily()
+    {
+        minimapUI.SetActive(true);
+        yield return new WaitForSeconds(30f);
+        minimapUI.SetActive(false);
+    }
+
 }
