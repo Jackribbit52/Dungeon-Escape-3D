@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,10 +13,17 @@ public class PlayerController : MonoBehaviour
     private float rotateInput;
     public BackgroundMusic bgm;
     public CountdownTimer timer;
+    public bool endless;
+    public int levelCount; //number of level to be played
+    public int levelcounter = 0; //counter to tell what level you are on.
 
-    [SerializeField]
-    private bool endless;
-    public int levelCount;
+    private void Awake()
+    {
+        if (endless)
+        {
+            timer.totalTime = 300;
+        }
+    }
 
     void Start()
     {
@@ -61,6 +69,7 @@ public class PlayerController : MonoBehaviour
             if (endless)
             {
                 SceneManager.LoadScene(1); // Reload the level for endless mode
+                levelcounter++;
             }
             else if (levelCount > 1)
             {

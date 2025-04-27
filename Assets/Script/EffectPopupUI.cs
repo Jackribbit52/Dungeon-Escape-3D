@@ -4,23 +4,36 @@ using TMPro;
 public class EffectPopupUI : MonoBehaviour
 {
     public TMP_Text messageText;
+    [SerializeField]
+    private GameObject panelObject;
 
-    public void Awake()
+    void Awake()
     {
-        gameObject.SetActive(false);
+        panelObject.SetActive(false);
     }
 
     public void ShowMessage(string message, float duration)
     {
-        gameObject.SetActive(true);
+        if (panelObject == null)
+        {
+            Debug.LogWarning("Popup panel object is missing!");
+            return;
+        }
+
+        panelObject.SetActive(true);
         messageText.text = message;
-        CancelInvoke(nameof(Hide)); // Just in case
+        CancelInvoke(nameof(Hide));
         Invoke(nameof(Hide), duration);
     }
 
     void Hide()
     {
-        gameObject.SetActive(false);
+        if (panelObject != null)
+        {
+            panelObject.SetActive(false);
+        }
     }
 }
+
+
 

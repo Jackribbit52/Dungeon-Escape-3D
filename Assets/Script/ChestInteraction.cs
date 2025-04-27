@@ -11,21 +11,30 @@ public class ChestInteraction : MonoBehaviour
     public List<System.Action> chestEffects; // List of effects (random actions)
     public Image blackScreenOverlay;
     public PlayerController playerController;
-    public EffectPopupUI popupUI;
+    [SerializeField]
+    private EffectPopupUI popupUI;
     [SerializeField] 
     private GameObject minimapUI;
 
 
     void Start()
     {
-        // Initialize chestEffects
         InitializeChestEffects();
-
-        // Listen for scene reloads
         SceneManager.sceneLoaded += OnSceneLoaded;
-
         minimapUI.SetActive(false);
+
+        // Always try finding UI on start
+        if (popupUI == null)
+        {
+            popupUI = FindFirstObjectByType<EffectPopupUI>();
+            if (popupUI == null)
+            {
+                Debug.LogWarning("Popup UI could not be found on Start!");
+            }
+        }
     }
+
+
 
     void OnDestroy()
     {
@@ -34,10 +43,26 @@ public class ChestInteraction : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        Debug.Log("Scene Loaded: " + scene.name);
+
         countdown = FindFirstObjectByType<CountdownTimer>();
         blackScreenOverlay = FindFirstObjectByType<Image>(); // If this is unique, otherwise be more specific
         playerController = FindFirstObjectByType<PlayerController>();
-        minimapUI = GameObject.FindGameObjectWithTag("Minimap"); // (Tag your minimap GameObject)
+
+        
+
+        if (popupUI == null)
+        {
+            popupUI = FindFirstObjectByType<EffectPopupUI>(); // Find the popup UI in the scene
+            if (popupUI == null)
+            {
+                Debug.LogWarning("Popup UI could not be found after scene reload!");
+            }
+        }
+        else
+        {
+            Debug.Log("Popup UI successfully found after scene reload.");
+        }
     }
 
 
@@ -69,7 +94,7 @@ public class ChestInteraction : MonoBehaviour
     // Adds random time to the timer
     void AddTimeEffect()
     {
-        int timeChange = Random.Range(5, 16); // 5 to 15 seconds
+        int timeChange = Random.Range(10, 21); // 10 to 20 seconds
         countdown.AddTime(timeChange);
         Debug.Log("Chest bonus! +" + timeChange + " seconds");
         if (popupUI != null)
@@ -81,7 +106,7 @@ public class ChestInteraction : MonoBehaviour
     // Removes random time from the timer
     void RemoveTimeEffect()
     {
-        int timeChange = Random.Range(5, 16); // 5 to 15 seconds
+        int timeChange = Random.Range(10, 21); // 10 to 20 seconds
         countdown.RemoveTime(timeChange);
         Debug.Log("Chest penalty! -" + timeChange + " seconds");
         if (popupUI != null)
@@ -176,22 +201,40 @@ public class ChestInteraction : MonoBehaviour
     }
 
     //Minimap
-    // New wrapper function for minimap
     void MinimapEffect()
     {
-        StartCoroutine(ShowMinimapTemporarily());
+        if (minimapUI == null)
+        {
+            minimapUI = GameObject.FindGameObjectWithTag("Minimap");
+            if (minimapUI == null)
+            {
+                Debug.LogWarning("Minimap UI not found when trying to activate minimap effect.");
+                return; // Exit early
+            }
+        } 
+
         if (popupUI != null)
         {
             popupUI.ShowMessage("A minimap has been revealed!", 5f);
         }
+        else
+        {
+            Debug.LogWarning("Popup UI not found! Could not show message.");
+        }
+        StartCoroutine(ShowMinimapTemporarily());
     }
 
-    // Existing coroutine stays like this:
     private IEnumerator ShowMinimapTemporarily()
     {
-        minimapUI.SetActive(true);
-        yield return new WaitForSeconds(30f);
-        minimapUI.SetActive(false);
+        if (minimapUI != null)
+        {
+            minimapUI.SetActive(true);
+            yield return new WaitForSeconds(30f);
+            minimapUI.SetActive(false);           
+        }
+        else
+        {
+            Debug.LogWarning("Minimap UI is missing! Cannot show minimap effect.");
+        }
     }
-
 }

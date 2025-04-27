@@ -8,6 +8,8 @@ public class CountdownTimer : MonoBehaviour
     public TMP_Text timerText;
 
     private static CountdownTimer instance;
+    [SerializeField]
+    private PlayerController playerController;
     private float currentTime;
 
     void Awake()
@@ -24,6 +26,10 @@ public class CountdownTimer : MonoBehaviour
 
     void Start()
     {
+        if (!playerController.endless)
+        {
+            totalTime = playerController.levelCount * 60;
+        }
         currentTime = totalTime;
         UpdateTimerText();
     }
