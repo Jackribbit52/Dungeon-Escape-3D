@@ -432,7 +432,7 @@ MonoBehaviour:
   bgm: {fileID: 1664605340}
   timer: {fileID: 1175340878}
   endless: 0
-  levelCount: 5
+  levelCount: 1
   levelcounter: 0
 --- !u!114 &437323225
 MonoBehaviour:
@@ -451,6 +451,7 @@ MonoBehaviour:
   playerController: {fileID: 437323224}
   popupUI: {fileID: 1908275785}
   minimapUI: {fileID: 1814549352}
+  bgm: {fileID: 1664605340}
 --- !u!1 &676569243
 GameObject:
   m_ObjectHideFlags: 0
@@ -1253,8 +1254,8 @@ MonoBehaviour:
   depth: 20
   chestPrefab: {fileID: 6856285602837067070, guid: c265b897764db12429d18c049ac4df26, type: 3}
   stairsPrefab: {fileID: 6886689026694720100, guid: 41f8dd5e61035b0468a552e01939006a, type: 3}
-  chestCount: 20
-  stairsCount: 10
+  chestCount: 25
+  stairsCount: 5
 --- !u!4 &1180430215
 Transform:
   m_ObjectHideFlags: 0

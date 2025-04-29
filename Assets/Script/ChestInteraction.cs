@@ -5,16 +5,26 @@ using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.SceneManagement;
 
+[System.Serializable]
+public class WeightedEffect
+{
+    public System.Action effect;
+    public float weight;
+}
+
 public class ChestInteraction : MonoBehaviour
 {
     public CountdownTimer countdown;
-    public List<System.Action> chestEffects; // List of effects (random actions)
+    //public List<System.Action> chestEffects; // List of effects (random actions)
+    private List<WeightedEffect> weightedEffects;
+
     public Image blackScreenOverlay;
     public PlayerController playerController;
     [SerializeField]
     private EffectPopupUI popupUI;
     [SerializeField] 
     private GameObject minimapUI;
+    public BackgroundMusic bgm;
 
 
     void Start()
@@ -68,15 +78,17 @@ public class ChestInteraction : MonoBehaviour
 
     void InitializeChestEffects()
     {
-        chestEffects = new List<System.Action>
+        weightedEffects = new List<WeightedEffect>
         {
-            AddTimeEffect,
-            RemoveTimeEffect,
-            BlackoutScreenEffect,
-            DoubleSpeedEffect,
-            HalfSpeedEffect,
-            FreezeEffect,
-            MinimapEffect
+            new WeightedEffect { effect = AddTimeEffect, weight = 5 },
+            new WeightedEffect { effect = RemoveTimeEffect, weight = 5 },
+            new WeightedEffect { effect = BlackoutScreenEffect, weight = 5 },
+            new WeightedEffect { effect = DoubleSpeedEffect, weight = 5 },
+            new WeightedEffect { effect = HalfSpeedEffect, weight = 5 },
+            new WeightedEffect { effect = FreezeEffect, weight = 5 },
+            new WeightedEffect { effect = MinimapEffect, weight = 3 },
+            new WeightedEffect { effect = EscapeScroll, weight = 1 },
+            new WeightedEffect { effect = Trapdoor, weight = 1 }
         };
     }
 
@@ -84,11 +96,29 @@ public class ChestInteraction : MonoBehaviour
     {
         if (other.CompareTag("Chest"))
         {
-            // Select a random effect from the list
-            int randomEffectIndex = Random.Range(0, chestEffects.Count);
-            chestEffects[randomEffectIndex].Invoke(); // Call the selected effect
+            var effect = GetRandomWeightedEffect();
+            effect?.Invoke(); // Safely call if not null
             Destroy(other.gameObject);
         }
+    }
+
+    System.Action GetRandomWeightedEffect()
+    {
+        float totalWeight = 0f;
+        foreach (var we in weightedEffects)
+            totalWeight += we.weight;
+
+        float randomValue = Random.Range(0f, totalWeight);
+        float runningSum = 0f;
+
+        foreach (var we in weightedEffects)
+        {
+            runningSum += we.weight;
+            if (randomValue <= runningSum)
+                return we.effect;
+        }
+
+        return null;
     }
 
     // Adds random time to the timer
@@ -139,44 +169,52 @@ public class ChestInteraction : MonoBehaviour
     void DoubleSpeedEffect()
     {
         //Temporary
-        //Debug.Log("Speed Doubled for 5 seconds!");
-        //StartCoroutine(TemporarySpeedChange(2f, 5f));
-
-        //Permanent
-        Debug.Log("Speed Doubled");
-        playerController.moveSpeed *= 2;
+        Debug.Log("Speed Doubled for 5 seconds!");
+        StartCoroutine(TemporarySpeedChange(2f, 5f));
         if (popupUI != null)
         {
             popupUI.ShowMessage("Your speed has been doubled!", 5f);
-        }    
+        }
+
+        //Permanent
+        //Debug.Log("Speed Doubled");
+        //playerController.moveSpeed *= 2;
+        //if (popupUI != null)
+        //{
+        //    popupUI.ShowMessage("Your speed has been doubled!", 5f);
+        //}    
     }
 
     // Slow time
     void HalfSpeedEffect()
     {
         //Temporary
-        //Debug.Log("Speed Halved for 5 seconds!");
-        //StartCoroutine(TemporarySpeedChange(0.5f, 5f));
-
-        //Permanent
-        Debug.Log("Speed Halved");
-        playerController.moveSpeed /= 2;
+        Debug.Log("Speed Halved for 5 seconds!");
+        StartCoroutine(TemporarySpeedChange(0.5f, 5f));
         if (popupUI != null)
         {
             popupUI.ShowMessage("Your speed has been halved!", 5f);
         }
+
+        //Permanent
+        //Debug.Log("Speed Halved");
+        //playerController.moveSpeed /= 2;
+        //if (popupUI != null)
+        //{
+        //    popupUI.ShowMessage("Your speed has been halved!", 5f);
+        //}
     }
 
     //Code for Temporary
-    //IEnumerator TemporarySpeedChange(float multiplier, float duration)
-    //{
-    //    float originalSpeed = playerController.moveSpeed;
-    //    playerController.moveSpeed *= multiplier;
+    IEnumerator TemporarySpeedChange(float multiplier, float duration)
+    {
+        float originalSpeed = playerController.moveSpeed;
+        playerController.moveSpeed *= multiplier;
 
-    //    yield return new WaitForSeconds(duration);
+        yield return new WaitForSeconds(duration);
 
-    //    playerController.moveSpeed = originalSpeed;
-    //}
+        playerController.moveSpeed = originalSpeed;
+    }
 
     // Freeze
     void FreezeEffect()
@@ -236,5 +274,32 @@ public class ChestInteraction : MonoBehaviour
         {
             Debug.LogWarning("Minimap UI is missing! Cannot show minimap effect.");
         }
+    }
+
+    void EscapeScroll()
+    {
+        StartCoroutine(ShowEscapeMessage());
+    }
+
+    private IEnumerator ShowEscapeMessage()
+    {
+        popupUI.ShowMessage("You found a scroll of escape! Escaping in 3 seconds", 3f);
+        yield return new WaitForSeconds(3f);
+        SceneManager.LoadScene(3);
+        countdown.AddTime(120);
+        bgm.PlayEndingMusic();
+    }
+
+    void Trapdoor()
+    {
+        StartCoroutine(ShowTrapdoorMessage());
+    }
+
+    private IEnumerator ShowTrapdoorMessage()
+    {
+        popupUI.ShowMessage("You activated a trapdoor! Rest in Peace!", 2f);
+        yield return new WaitForSeconds(2f);
+        SceneManager.LoadScene(2);
+        countdown.AddTime(120);
     }
 }
